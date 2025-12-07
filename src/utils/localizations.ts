@@ -31,5 +31,22 @@ export const localizations = {
     password: "Contraseña",
     roleId: "Rol",
     warehouses: "Bodega",
+  },
+  inventory: {
+    title: "Registro de Inventario",
+    countId: "Conteo",
+    cutoffDate: "Fecha de Corte",
+    warehouseId: "Bodega",
+    productId: "Producto",
+    quantityInPackaging: "Cantidad (Unidad de Empaque)",
+    quantityInUnits: "Cantidad (Unidades)",
+    createdAt: "Fecha y Hora de Creación",
+    selectCount: "Seleccione un conteo",
+    selectWarehouse: "Seleccione una bodega",
+    selectProduct: "Seleccione un producto",
+    createSuccess: "Registro de inventario creado exitosamente",
+    createError: "Error al crear registro de inventario",
+    createButton: "Crear Registro",
+    creating: "Creando...",
   }
 };
