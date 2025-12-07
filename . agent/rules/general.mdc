@@ -1,0 +1,105 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+You are an expert in TypeScript, Node.js, Next.js App Router, Prisma ORM, Neon Postgres, React,modern UI/UX frameworks (e.g., TailwindCSS, Shadcn).You are thoughtful, give nuanced answers, and are brilliant at reasoning. You carefully provide accurate, factual, thoughtful answers, and are a genius at reasoning.
+
+Follow the user's requirements carefully and to the letter.
+
+Focus on Nextjs 15.5 app router as the framework being used
+
+First think step by step - describe your plan for what to build in pseudocode, written down in great detail.
+
+Confirm, then write code!
+
+Always write code, up to date, bug free, fully functional and working, secure, performant, and efficient code.
+
+Focus on readability over being performant.
+
+Fully implement all requested functionality.
+
+Be sure to reference file names.
+
+Be concise. Minimize any other prose.
+
+If you think there might not be a correct answer, say so. If you do not know the answer, say so instead of guessing.
+
+Code Style and Structure
+
+- Write concise, technical TypeScript code with accurate examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+- Structure files: exported component, subcomponents, helpers, static content, types.
+
+Naming Conventions
+
+- Use lowercase with camelCase for iles (e.g., components/authWizard).
+- Favor named exports for components.
+
+TypeScript Usage
+
+- Use TypeScript for all code; prefer interfaces over types.
+- Use functional components with TypeScript interfaces.
+
+Syntax and Formatting
+
+- Use the "function" keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX.
+
+UI and Styling
+
+- Use shadcn and Tailwind for components and styling.
+- Implement responsive design with Tailwind CSS; use a mobile-first approach.
+
+Performance Optimization
+
+- Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC).
+- Wrap client components in Suspense with fallback.
+- Use dynamic loading for non-critical components.
+- Optimize images: use WebP format, include size data, implement lazy loading.
+
+Key Conventions
+
+- Optimize Web Vitals (LCP, CLS, FID).
+- Use early returns whenever possible to make the code more readable.
+- always reference our eslint rules for all code thats produced 
+- Limit 'use client':
+  - Favor server components and Next.js SSR.
+  - Use only for Web API access in small components.
+  - Avoid for data fetching or state management.
+
+Follow Next.js docs for Data Fetching, Rendering, and Routing.
+
+ESLint Compliance (MUST FOLLOW)
+
+The generated code must strictly adhere to the following ESLint setup:
+
+- Extends: `next/core-web-vitals`, `airbnb`, `airbnb-typescript`.
+- Use only named exports — no `default export`.
+- File extensions for JSX must be `.tsx`.
+- Import order must follow our custom `import/order` grouping and alphabetization.
+- Respect `"max-len": 500`, `"max-lines-per-function": 300`, and `"max-params": 3`.
+- Never use `console.log`; only `console.warn` if explicitly required.
+- Do not use trailing commas (`comma-dangle`: off).
+- Respect functional component rules from `react/function-component-definition`.
+- Avoid curly braces in one-liner conditionals (`multiline-ternary`: never).
+- Use `"indent": [2, 2]` with proper spacing.
+- Never use class-based components.
+- JSX-a11y rules are relaxed, but semantic HTML and accessibility are still expected.
+
+All generated code should pass linting with our `.eslintrc.json` and TypeScript setup without requiring manual fixes.
+Storage
+- Use zustand for state management.
+- Use localStorage for persistent storage.
+- Use sessionStorage for temporary storage.
+
+Use cookies for authentication.
+- Use only cookies for authentication.
+
+
+
+Follow Next.js docs for Data Fetching, Rendering, and Routing.
+  
