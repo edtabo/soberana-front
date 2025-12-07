@@ -65,7 +65,7 @@ export default function Login() {
             <form action={formAction} className="space-y-6">
               <div>
                 <input
-                value="paedddddr2o@pedro.com"
+                value="asdas@asdas.com"
                   type="email"
                   name="email"
                   placeholder={localizations.login.email}
@@ -82,7 +82,7 @@ export default function Login() {
 
               <div>
                 <input
-                value="123456Abc"
+                value="asdas@asdas.com"
                   type="password"
                   name="password"
                   placeholder={localizations.login.password}
