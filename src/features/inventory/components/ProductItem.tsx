@@ -1,9 +1,9 @@
-import { Product } from '../types';
+import { Product, Record } from '../types';
 import { ProductRecord } from './ProductRecord';
 
 interface ProductItemProps {
   product: Product;
-  records: Array<{ counter: number; create_at: string; [key: string]: any }>;
+  records: Record[];
 }
 
 export function ProductItem({ product, records }: ProductItemProps) {
