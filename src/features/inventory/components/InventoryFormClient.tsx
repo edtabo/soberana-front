@@ -150,7 +150,7 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
       <div className="space-y-6">
         {/* Bodega */}
         <div>
-          <label htmlFor="warehouseId" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="warehouseId" className="block text-sm font-medium mb-1 text-black">
             {localizations.inventory.warehouseId} *
           </label>
           <select
@@ -175,7 +175,7 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
 
         {/* Conteo */}
         <div>
-          <label htmlFor="countId" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="countId" className="block text-sm font-medium mb-1 text-black">
             {localizations.inventory.countId} *
           </label>
           <div className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
@@ -201,14 +201,14 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
                 <div key={product.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <div>
-                      <h4 className="font-medium">{product.name}</h4>
-                      <p className="text-sm text-gray-500">
+                      <h4 className="font-medium text-black">{product.name}</h4>
+                      <p className="text-sm text-black">
                         {packagingUnit} {product.packaging_unit_name || 'unidades'} por empaque
                       </p>
                     </div>
                     <div className="flex items-center space-x-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium mb-1 text-black">
                           Cantidad (empaques)
                         </label>
                         <input
@@ -221,10 +221,10 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium mb-1 text-black">
                           Total unidades
                         </label>
-                        <div className="w-24 px-2 py-1 bg-gray-50 rounded-md">
+                        <div className="w-24 px-2 py-1 bg-gray-500 rounded-md">
                           {quantity.units}
                         </div>
                       </div>
@@ -238,7 +238,7 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
 
         {/* Fecha de corte */}
         <div>
-          <label htmlFor="cutoffDate" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="cutoffDate" className="block text-sm font-medium mb-1 text-black">
             {localizations.inventory.cutoffDate} *
           </label>
           <select
