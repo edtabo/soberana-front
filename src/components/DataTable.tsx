@@ -3,14 +3,41 @@
 import DataTable from 'react-data-table-component';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 interface DataTableProps {
   data: any[];
   columns: string[];
   editPath?: string;
+  onDelete?: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-export default function DataTableComponent({ data, columns, editPath }: DataTableProps) {
+export default function DataTableComponent({ data, columns, editPath, onDelete }: DataTableProps) {
+  const router = useRouter();
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!onDelete) return;
+
+    const confirmed = window.confirm('¿Estás seguro de que deseas eliminar este registro?');
+    if (!confirmed) return;
+
+    try {
+      const result = await onDelete(id);
+      if (result.success) {
+        toast.success('Registro eliminado correctamente');
+        router.refresh();
+      } else {
+        toast.error(result.error || 'Error al eliminar el registro');
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Error al procesar la solicitud');
+    }
+  };
   
   const tableColumns = [
     ...columns.map((col) => ({
@@ -33,7 +60,11 @@ export default function DataTableComponent({ data, columns, editPath }: DataTabl
               <FaEdit />
             </button>
           )}
-          <button className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600 transition">
+          <button 
+            onClick={(e) => onDelete && handleDelete(row.id, e)}
+            className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600 transition"
+            disabled={!onDelete}
+          >
             <FaTrash />
           </button>
         </div>

@@ -175,6 +175,34 @@ export async function getUserById(id: string): Promise<User | null> {
   }
 }
 
+export async function deleteUser(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+
+    if (!token) {
+      return { success: false, error: 'No autenticado' };
+    }
+
+    const response = await apiFetch({
+      url: `${URLS.users}/${id}`,
+      method: RequestMethods.DELETE,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.success) {
+      return { success: false, error: response.message || 'Error al eliminar el usuario' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return { success: false, error: 'Error al procesar la solicitud' };
+  }
+}
+
 export async function updateUser(id: string, prevState: any, formData: FormData): Promise<UserActionState> {
   const body = {
     email: formData.get('email'),
