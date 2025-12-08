@@ -4,11 +4,12 @@ import { cookies } from 'next/headers';
 import { apiFetch } from '@/utils/fetch';
 import { RequestMethods } from '@/utils/enums';
 import { URLS } from '@/utils/urls';
-import { redirect } from 'next/navigation';
 import { ZodError } from 'zod';
 import { createErrorToast, ToastType } from '@/utils/toastUtils';
 import { localizations } from '@/utils/localizations';
 import { inventorySchema } from '../schemas/inventorySchema';
+import { InventoryResponse } from '../types';
+
 
 export interface InventoryActionState {
   success?: boolean;
@@ -106,12 +107,7 @@ export async function createInventory(prevState: InventoryActionState | null, fo
         quantity_in_units: p.quantityInUnits
       }))
     };
-
-
-    console.log(" +++++++++++++++++++ ")
-    console.log(payload)
-    console.log(" +++++++++++++++++++ ")
-
+    
     const req = await apiFetch({
       url: URLS.inventory,
       method: RequestMethods.POST,
@@ -145,4 +141,33 @@ export async function createInventory(prevState: InventoryActionState | null, fo
     });
   }
 }
+
+
+
+export async function getInventory(){
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const req = await apiFetch({
+      url: URLS.inventory,
+      method: RequestMethods.GET,
+      headers,
+    });
+
+    console.log(" IIIIIIIIIIIII ")
+    console.log(req)
+    console.log(" IIIIIIIIIIIII ")
+
+    return req.data || [];
+
+  } catch (error) {
+    console.error('Error fetching inventory:', error);
+    return [];
+  }
+}
+
 

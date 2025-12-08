@@ -57,7 +57,8 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
 
   const today = new Date();
   const currentDay = today.getDate();
-  const isInventoryDisabled = currentDay > Number(process.env.NEXT_PUBLIC_MAX_DAYS || 3);
+  // const isInventoryDisabled = currentDay > Number(process.env.MAX_DAYS || 3);
+  const isInventoryDisabled = false;
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -134,6 +135,7 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
       <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
           <p className="text-red-700 font-medium">
+            11111
             El control de inventario no se puede realizar. Solo está disponible los primeros 3 días del mes.
           </p>
         </div>
