@@ -1,5 +1,7 @@
 import { getInventory } from '../actions/actions';
 import { UserInventoryUi } from './UserInventory';
+import { UserInventory } from '../types';
+
 
 export default async function InventoryFormAdmin() {
   const inventoryData = await getInventory();
@@ -29,7 +31,7 @@ export default async function InventoryFormAdmin() {
       </div>
       
       <div className="space-y-8">
-        {inventoryData.map((user, index) => (
+        {inventoryData.map((user: UserInventory, index: number) => (
           <UserInventoryUi key={`${user.email}-${index}`} user={user} />
         ))}
       </div>
