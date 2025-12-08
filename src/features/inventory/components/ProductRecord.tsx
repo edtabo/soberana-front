@@ -1,4 +1,4 @@
-import { format } from 'date-fns/format';
+import format from 'date-fns/format';
 import { es } from 'date-fns/locale';
 
 import { Record } from '../types';
@@ -15,7 +15,7 @@ export function ProductRecord({ record }: ProductRecordProps) {
           <div>
             <h4 className="font-medium">Conteo #{record.counter}</h4>
             <p className="text-sm text-gray-500">
-              {format(new Date(record.create_at), 'PPpp', { locale: es })}
+              {format(new Date(record.create_at), 'PPpp')}
             </p>
           </div>
           <div className="text-right">
