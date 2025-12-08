@@ -1,36 +1,41 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { createInventory } from '@/features/inventory/actions/actions';
 import { useFormStatus } from 'react-dom';
 import { toast } from 'react-toastify';
 import { localizations } from '@/utils/localizations';
 
 interface Warehouse {
-  id: string | number;
+  id: number;
   name: string;
-  status: boolean;
+  code: string;
+  maxCount: number;
+  canCountToday: boolean;
+  nextCountNumber: number;
 }
 
-interface Count {
-  id: string | number;
-  name?: string;
-  code?: string;
-  [key: string]: unknown;
-}
 
 interface Product {
   id: string | number;
   name: string;
   packaging_unit?: number;
   packaging_unit_name?: string;
+  type?: number;
+  type_id?: number;
   [key: string]: unknown;
+}
+
+
+interface ProductQuantity {
+  packaging: string;
+  units: number;
 }
 
 interface InventoryFormProps {
   warehouses: Warehouse[];
-  counts: Count[];
   products: Product[];
+  onSuccess?: () => Promise<void>; // Add this line
 }
 
 function SubmitButton() {
@@ -47,164 +52,219 @@ function SubmitButton() {
   );
 }
 
-export default function InventoryForm({ warehouses, counts, products }: InventoryFormProps) {
+export default function InventoryForm({ warehouses, products, onSuccess }: InventoryFormProps) {
   const [state, dispatch] = useActionState(createInventory, null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [quantityInPackaging, setQuantityInPackaging] = useState<string>('');
-  const [quantityInUnits, setQuantityInUnits] = useState<number>(0);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<number | null>(null);
+  const [productQuantities, setProductQuantities] = useState<Record<string, ProductQuantity>>({});
+  const formRef = useRef<HTMLFormElement>(null);
+
+
+  const today = new Date();
+  const currentDay = today.getDate();
+  const isInventoryDisabled = currentDay > Number(process.env.MAX_DAYS);
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+  const daysInMonth = 3;
+
+  const dayOptions = Array.from({ length: daysInMonth }, (_, i) => {
+    const day = i + 1;
+    return {
+      value: `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+      label: `${day} de ${new Date(currentYear, currentMonth - 1, 1).toLocaleString('es', { month: 'long' })}`
+    };
+  });
 
   useEffect(() => {
-    if (state && !state.success && state.error) {
+    if (!state) return;
+
+    if (state.success) {
+      toast.success(state.toast?.message || localizations.inventory.createSuccess);
+      formRef.current?.reset();
+      setProductQuantities({});
+      setSelectedWarehouse(null);
+      if (onSuccess) onSuccess();
+    } else if (state.error) {
       toast.error(state.error);
     }
   }, [state]);
 
-  const handleProductChange = (productId: string) => {
-    const product = products.find(p => String(p.id) === productId);
-    setSelectedProduct(product || null);
-    // Reset quantities when product changes
-    setQuantityInPackaging('');
-    setQuantityInUnits(0);
+  const getNextCount = (warehouseId: number | null) => {
+      if (!warehouseId) return 1;
+      const warehouse = warehouses.find(w => w.id === warehouseId);
+      if (!warehouse) return 1;
+
+      // Use the nextCountNumber from the warehouse data
+      return warehouse.nextCountNumber;
   };
 
-  const handleQuantityChange = (value: string) => {
-    setQuantityInPackaging(value);
-    
-    if (selectedProduct && selectedProduct.packaging_unit && value) {
-      const packagingUnit = selectedProduct.packaging_unit;
-      const quantity = parseFloat(value);
-      if (!isNaN(quantity) && quantity >= 0) {
-        const units = quantity * packagingUnit;
-        setQuantityInUnits(Math.round(units * 100) / 100); // Round to 2 decimal places
-      } else {
-        setQuantityInUnits(0);
+  const handleQuantityChange = (productId: string | number, value: string, packagingUnit: number) => {
+    const packagingQty = parseFloat(value) || 0;
+    const units = Math.round(packagingQty * packagingUnit * 100) / 100;
+
+    setProductQuantities(prev => ({
+      ...prev,
+      [productId]: {
+        packaging: value,
+        units
       }
-    } else {
-      setQuantityInUnits(0);
-    }
+    }));
   };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    
+    const productsData = Object.entries(productQuantities)
+      .filter(([_, qty]) => qty.packaging && parseFloat(qty.packaging) > 0)
+      .map(([productId, qty]) => ({
+        productId: Number(productId),
+        quantityInPackaging: parseFloat(qty.packaging),
+        quantityInUnits: qty.units
+      }));
+
+    formData.append('products', JSON.stringify(productsData));
+    
+    dispatch(formData);
+  };
+
+
+  if (isInventoryDisabled) {
+    return (
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <p className="text-red-700 font-medium">
+            El control de inventario no se puede realizar. Solo está disponible los primeros 3 días del mes.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
-    <form action={dispatch} className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">{localizations.inventory.title}</h3>
+    <form ref={formRef}  onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+      <h3 className="text-xl font-semibold text-gray-800 mb-6">{localizations.inventory.title}</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        {/* Bodega */}
         <div>
-          <label htmlFor="countId" className="block text-sm font-medium text-gray-700 mb-1">
-            {localizations.inventory.countId} *
+          <label htmlFor="warehouseId" className="block text-sm font-medium text-gray-700 mb-1">
+            {localizations.inventory.warehouseId} *
           </label>
           <select
-            id="countId"
-            name="countId"
+            id="warehouseId"
+            name="warehouseId"
             required
+            value={selectedWarehouse || ''}
+            onChange={(e) => {
+              const warehouseId = Number(e.target.value);
+              setSelectedWarehouse(warehouseId);
+            }}
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            <option value="">{localizations.inventory.selectCount}</option>
-            {counts.map((count) => (
-              <option key={count.id} value={count.id}>
-                {count.name || count.code || `Conteo ${count.id}`}
+            <option value="">{localizations.inventory.selectWarehouse}</option>
+            {warehouses.map((warehouse) => (
+              <option key={warehouse.id} value={warehouse.id}>
+                {warehouse.name}
               </option>
             ))}
           </select>
         </div>
 
+        {/* Conteo */}
+        <div>
+          <label htmlFor="countId" className="block text-sm font-medium text-gray-700 mb-1">
+            {localizations.inventory.countId} *
+          </label>
+          <div className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+                {selectedWarehouse ? `Conteo ${getNextCount(selectedWarehouse)}` :  'Seleccione una bodega primero' }
+          </div>
+          <input
+            type="hidden"
+            id="countId"
+            name="countId"
+            value={selectedWarehouse ? getNextCount(selectedWarehouse) : 1}
+          />
+        </div>
+
+        {/* Products List */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-900">Productos</h3>
+          <div className="space-y-4">
+            {products.map((product) => {
+              const packagingUnit = product.packaging_unit || 1;
+              const quantity = productQuantities[product.id] || { packaging: '', units: 0 };
+
+              return (
+                <div key={product.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <h4 className="font-medium">{product.name}</h4>
+                      <p className="text-sm text-gray-500">
+                        {packagingUnit} {product.packaging_unit_name || 'unidades'} por empaque
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Cantidad (empaques)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={quantity.packaging}
+                          onChange={(e) => handleQuantityChange(product.id, e.target.value, packagingUnit)}
+                          className="w-24 border rounded-md px-2 py-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Total unidades
+                        </label>
+                        <div className="w-24 px-2 py-1 bg-gray-50 rounded-md">
+                          {quantity.units}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+
+        {/* Fecha de corte */}
         <div>
           <label htmlFor="cutoffDate" className="block text-sm font-medium text-gray-700 mb-1">
             {localizations.inventory.cutoffDate} *
           </label>
-          <input
-            type="date"
+          <select
             id="cutoffDate"
             name="cutoffDate"
             required
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
+          >
+            <option value="">Seleccione una fecha</option>
+            {dayOptions.map((day) => (
+              <option key={day.value} value={day.value}>
+                {day.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">Solo se pueden seleccionar los primeros 3 días del mes</p>
         </div>
       </div>
 
-      <div>
-        <label htmlFor="warehouseId" className="block text-sm font-medium text-gray-700 mb-1">
-          {localizations.inventory.warehouseId} *
-        </label>
-        <select
-          id="warehouseId"
-          name="warehouseId"
-          required
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          <option value="">{localizations.inventory.selectWarehouse}</option>
-          {warehouses.map((warehouse) => (
-            <option key={warehouse.id} value={warehouse.id} disabled={!warehouse.status}>
-              {warehouse.status ? warehouse.name : `${warehouse.name} - Inactivo`}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="productId" className="block text-sm font-medium text-gray-700 mb-1">
-          {localizations.inventory.productId} *
-        </label>
-        <select
-          id="productId"
-          name="productId"
-          required
-          onChange={(e) => handleProductChange(e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          <option value="">{localizations.inventory.selectProduct}</option>
-          {products.map((product) => (
-            <option key={product.id} value={product.id}>
-              {product.name} {product.packaging_unit_name ? `(${product.packaging_unit_name})` : ''}
-            </option>
-          ))}
-        </select>
-        {selectedProduct && selectedProduct.packaging_unit && (
-          <p className="text-xs text-gray-500 mt-1">
-            Unidad de empaque: {selectedProduct.packaging_unit} {selectedProduct.packaging_unit_name || 'unidades'}
-          </p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label htmlFor="quantityInPackaging" className="block text-sm font-medium text-gray-700 mb-1">
-            {localizations.inventory.quantityInPackaging} *
-          </label>
-          <input
-            type="number"
-            id="quantityInPackaging"
-            name="quantityInPackaging"
-            required
-            min="0"
-            step="0.01"
-            value={quantityInPackaging}
-            onChange={(e) => handleQuantityChange(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="0.00"
-          />
+      
+        <div className="pt-4">
+          <SubmitButton />
         </div>
-
-        <div>
-          <label htmlFor="quantityInUnits" className="block text-sm font-medium text-gray-700 mb-1">
-            {localizations.inventory.quantityInUnits}
-          </label>
-          <input
-            type="number"
-            id="quantityInUnits"
-            name="quantityInUnits"
-            readOnly
-            value={quantityInUnits}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="0.00"
-          />
-          <p className="text-xs text-gray-500 mt-1">Calculado automáticamente</p>
-        </div>
-      </div>
-
-      <div className="pt-4">
-        <SubmitButton />
-      </div>
+      
     </form>
   );
 }

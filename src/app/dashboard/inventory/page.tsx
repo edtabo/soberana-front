@@ -1,12 +1,37 @@
-import { getCounts, getProducts, getWarehouses } from '@/features/inventory/actions/actions';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { getProducts, getWarehouses } from '@/features/inventory/actions/actions';
 import InventoryForm from '@/features/inventory/components/InventoryForm';
 
-export default async function InventoryPage() {
-  const [warehouses, counts, products] = await Promise.all([
-    getWarehouses(),
-    getCounts(),
-    getProducts(),
-  ]);
+export default function InventoryPage() {
+  const [warehouses, setWarehouses] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [warehousesData, productsData] = await Promise.all([
+        getWarehouses(),
+        getProducts(),
+      ]);
+      setWarehouses(warehousesData || []);
+      setProducts(productsData || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -16,9 +41,9 @@ export default async function InventoryPage() {
       </div>
       
       <InventoryForm 
-        warehouses={warehouses || []} 
-        counts={counts || []} 
-        products={products || []} 
+        warehouses={warehouses} 
+        products={products}
+        onSuccess={fetchData} 
       />
     </div>
   );
