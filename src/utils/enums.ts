@@ -5,3 +5,8 @@ export enum RequestMethods {
   DELETE = 'DELETE',
   PATCH = 'PATCH',
 }
+
+export enum Roles {
+  ADMIN = 1,
+  USER = 2,
+}

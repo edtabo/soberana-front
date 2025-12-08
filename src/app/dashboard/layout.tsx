@@ -8,6 +8,10 @@ export default async function DashboardLayout({
 }) {
   const role = await getUserRole();
 
+  console.log(" 1111111111111111 ")
+  console.log(role)
+  console.log(" 1111111111111111 ")
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar role={role} />

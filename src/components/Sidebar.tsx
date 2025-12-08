@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/features/login/actions/actions';
+import { Roles } from '@/utils/enums';
 
 interface SidebarProps {
   role: number | null;
@@ -17,7 +18,7 @@ export default function Sidebar({ role }: SidebarProps) {
     {
       label: 'Usuarios',
       href: '/dashboard/users',
-      visible: role === 1,
+      visible: role === Roles.ADMIN,
     },
     {
       label: 'Inventario',

@@ -19,11 +19,10 @@ export function middleware(req: NextRequest) {
 
   if (token) {
     try {
-      // Usamos decode para leer la expiración sin verificar firma (evita crash en Edge)
+      
       const decoded = jwt.decode(token) as { exp?: number; } | null;
       const currentTime = Math.floor(Date.now() / 1000);
 
-      // Validar si existe y no ha expirado
       if (decoded && decoded.exp && decoded.exp > currentTime) {
         isValid = true;
       }
@@ -33,17 +32,12 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // 1. Usuario autenticado en ruta pública (ej: Login) -> Redirigir a Dashboard
-  if (isValid && isPublicRoute) {
+  if (isValid && isPublicRoute)
     return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
 
-  // 2. Usuario NO autenticado en ruta protegida -> Redirigir a Login
-  if (!isValid && !isPublicRoute) {
+  if (!isValid && !isPublicRoute)
     return NextResponse.redirect(new URL("/", req.url));
-  }
 
-  // 3. Todo correcto -> Continuar
   return NextResponse.next();
 }
 

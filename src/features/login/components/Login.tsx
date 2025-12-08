@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useFormState } from 'react-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { actionLogin } from '@/features/login/actions/actions';
 import { localizations } from '@/utils/localizations';
 import { SubmitButton } from './SubmitButton';
@@ -16,8 +16,20 @@ const initialState: any = {
 };
 
 export default function Login() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [state, formAction] = useFormState(actionLogin, initialState);
   const toast = useToast();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   useEffect(() => {
     if (state?.toast) {
@@ -65,9 +77,10 @@ export default function Login() {
             <form action={formAction} className="space-y-6">
               <div>
                 <input
-                value="asdas@asdas.com"
                   type="email"
                   name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder={localizations.login.email}
                   className={`w-full px-0 py-3 border-0 border-b-2 ${
                     state?.fieldErrors?.email 
@@ -82,9 +95,10 @@ export default function Login() {
 
               <div>
                 <input
-                value="asdas@asdas.com"
                   type="password"
                   name="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   placeholder={localizations.login.password}
                   className={`w-full px-0 py-3 border-0 border-b-2 ${
                     state?.fieldErrors?.password 

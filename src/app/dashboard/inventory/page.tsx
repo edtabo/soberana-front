@@ -1,36 +1,19 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import { getProducts, getWarehouses } from '@/features/inventory/actions/actions';
-import InventoryForm from '@/features/inventory/components/InventoryForm';
+import { getUserRole } from '@/utils/auth';
+import { Roles } from '@/utils/enums';
+import InventoryFormClient from '@/features/inventory/components/InventoryFormClient';
+import InventoryFormAdmin from '@/features/inventory/components/InventoryFormAdmin';
 
-export default function InventoryPage() {
-  const [warehouses, setWarehouses] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default async function InventoryPage() {
+  const [warehouses, products] = await Promise.all([
+    getWarehouses(),
+    getProducts()
+  ]);
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const [warehousesData, productsData] = await Promise.all([
-        getWarehouses(),
-        getProducts(),
-      ]);
-      setWarehouses(warehousesData || []);
-      setProducts(productsData || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const role = await getUserRole();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  if (isLoading) {
-    return <div>Cargando...</div>;
+  if (role === Roles.ADMIN) {
+    return <InventoryFormAdmin />;
   }
 
   return (
@@ -40,10 +23,9 @@ export default function InventoryPage() {
         <p className="text-gray-500">Complete el formulario para registrar un nuevo item de inventario.</p>
       </div>
       
-      <InventoryForm 
-        warehouses={warehouses} 
-        products={products}
-        onSuccess={fetchData} 
+      <InventoryFormClient 
+        warehouses={warehouses || []} 
+        products={products || []}
       />
     </div>
   );
