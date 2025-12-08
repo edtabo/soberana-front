@@ -57,8 +57,7 @@ export default function InventoryFormClient({ warehouses, products, onSuccess }:
 
   const today = new Date();
   const currentDay = today.getDate();
-  // const isInventoryDisabled = currentDay > Number(process.env.MAX_DAYS || 3);
-  const isInventoryDisabled = false;
+  const isInventoryDisabled = currentDay > Number(process.env.MAX_DAYS || 3);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
