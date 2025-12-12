@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useActionState, useEffect, useRef, useState } from 'react';
-import { createInventory } from '@/features/inventory/actions/actions';
-import { useFormStatus } from 'react-dom';
-import { toast } from 'react-toastify';
-import { localizations } from '@/utils/localizations';
+import { useActionState, useEffect, useRef, useState } from "react";
+import { createInventory } from "@/features/inventory/actions/actions";
+import { useFormStatus } from "react-dom";
+import { toast } from "react-toastify";
+import { localizations } from "@/utils/localizations";
 
 interface Warehouse {
   id: number;
@@ -15,7 +15,6 @@ interface Warehouse {
   nextCountNumber: number;
 }
 
-
 interface Product {
   id: string | number;
   name: string;
@@ -25,7 +24,6 @@ interface Product {
   type_id?: number;
   [key: string]: unknown;
 }
-
 
 interface ProductQuantity {
   packaging: string;
@@ -47,21 +45,31 @@ function SubmitButton() {
       disabled={pending}
       className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {pending ? localizations.inventory.creating : localizations.inventory.createButton}
+      {pending
+        ? localizations.inventory.creating
+        : localizations.inventory.createButton}
     </button>
   );
 }
 
-export default function InventoryForm({ warehouses, products, onSuccess }: InventoryFormProps) {
+export default function InventoryForm({
+  warehouses,
+  products,
+  onSuccess,
+}: InventoryFormProps) {
   const [state, dispatch] = useActionState(createInventory, null);
-  const [selectedWarehouse, setSelectedWarehouse] = useState<number | null>(null);
-  const [productQuantities, setProductQuantities] = useState<Record<string, ProductQuantity>>({});
+  const [selectedWarehouse, setSelectedWarehouse] = useState<number | null>(
+    null
+  );
+  const [productQuantities, setProductQuantities] = useState<
+    Record<string, ProductQuantity>
+  >({});
   const formRef = useRef<HTMLFormElement>(null);
-
 
   const today = new Date();
   const currentDay = today.getDate();
-  const isInventoryDisabled = currentDay > Number(process.env.MAX_DAYS);
+  // const isInventoryDisabled = currentDay > Number(process.env.MAX_DAYS);
+  const isInventoryDisabled = currentDay > 50;
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -71,8 +79,14 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
   const dayOptions = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
     return {
-      value: `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
-      label: `${day} de ${new Date(currentYear, currentMonth - 1, 1).toLocaleString('es', { month: 'long' })}`
+      value: `${currentYear}-${currentMonth.toString().padStart(2, "0")}-${day
+        .toString()
+        .padStart(2, "0")}`,
+      label: `${day} de ${new Date(
+        currentYear,
+        currentMonth - 1,
+        1
+      ).toLocaleString("es", { month: "long" })}`,
     };
   });
 
@@ -80,7 +94,9 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
     if (!state) return;
 
     if (state.success) {
-      toast.success(state.toast?.message || localizations.inventory.createSuccess);
+      toast.success(
+        state.toast?.message || localizations.inventory.createSuccess
+      );
       formRef.current?.reset();
       setProductQuantities({});
       setSelectedWarehouse(null);
@@ -91,79 +107,91 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
   }, [state]);
 
   const getNextCount = (warehouseId: number | null) => {
-      if (!warehouseId) return 1;
-      const warehouse = warehouses.find(w => w.id === warehouseId);
-      if (!warehouse) return 1;
+    if (!warehouseId) return 1;
+    const warehouse = warehouses.find((w) => w.id === warehouseId);
+    if (!warehouse) return 1;
 
-      return warehouse.nextCountNumber;
+    return warehouse.nextCountNumber;
   };
 
   const getCanCountToday = (warehouseId: number | null) => {
     if (!warehouseId) return false;
-    const warehouse = warehouses.find(w => w.id === warehouseId);
+    const warehouse = warehouses.find((w) => w.id === warehouseId);
     return warehouse ? warehouse.canCountToday : false;
   };
 
-  const handleQuantityChange = (productId: string | number, value: string, packagingUnit: number) => {
+  const handleQuantityChange = (
+    productId: string | number,
+    value: string,
+    packagingUnit: number
+  ) => {
     const packagingQty = parseFloat(value) || 0;
     const units = Math.round(packagingQty * packagingUnit * 100) / 100;
 
-    setProductQuantities(prev => ({
+    setProductQuantities((prev) => ({
       ...prev,
       [productId]: {
         packaging: value,
-        units
-      }
+        units,
+      },
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const formData = new FormData(e.currentTarget as HTMLFormElement);
-    
+
     const productsData = Object.entries(productQuantities)
       .filter(([_, qty]) => qty.packaging && parseFloat(qty.packaging) > 0)
       .map(([productId, qty]) => ({
         productId: Number(productId),
         quantityInPackaging: parseFloat(qty.packaging),
-        quantityInUnits: qty.units
+        quantityInUnits: qty.units,
       }));
 
-    formData.append('products', JSON.stringify(productsData));
-    
+    formData.append("products", JSON.stringify(productsData));
+
     dispatch(formData);
   };
-
 
   if (isInventoryDisabled) {
     return (
       <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
           <p className="text-red-700 font-medium">
-            El control de inventario no se puede realizar. Solo está disponible los primeros 3 días del mes.
+            El control de inventario no se puede realizar. Solo está disponible
+            los primeros 3 días del mes.
           </p>
         </div>
       </div>
     );
   }
 
-
   return (
-    <form ref={formRef}  onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
-      <h3 className="text-xl font-semibold text-gray-800 mb-6">{localizations.inventory.title}</h3>
-      
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="space-y-6 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow"
+    >
+      <h3 className="text-xl font-semibold text-gray-800 mb-6">
+        {localizations.inventory.title}
+      </h3>
+
       <div className="space-y-6">
         {/* Bodega */}
         <div>
-          <label htmlFor="warehouseId" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="warehouseId"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             {localizations.inventory.warehouseId} *
           </label>
           <select
             id="warehouseId"
             name="warehouseId"
             required
-            value={selectedWarehouse || ''}
+            value={selectedWarehouse || ""}
             onChange={(e) => {
               const warehouseId = Number(e.target.value);
               setSelectedWarehouse(warehouseId);
@@ -181,11 +209,16 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
 
         {/* Conteo */}
         <div>
-          <label htmlFor="countId" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="countId"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             {localizations.inventory.countId} *
           </label>
           <div className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50">
-                {selectedWarehouse ? `Conteo ${getNextCount(selectedWarehouse)}` :  'Seleccione una bodega primero' }
+            {selectedWarehouse
+              ? `Conteo ${getNextCount(selectedWarehouse)}`
+              : "Seleccione una bodega primero"}
           </div>
           <input
             type="hidden"
@@ -201,7 +234,10 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
           <div className="space-y-4">
             {products.map((product) => {
               const packagingUnit = product.packaging_unit || 1;
-              const quantity = productQuantities[product.id] || { packaging: '', units: 0 };
+              const quantity = productQuantities[product.id] || {
+                packaging: "",
+                units: 0,
+              };
 
               return (
                 <div key={product.id} className="border rounded-lg p-4">
@@ -209,7 +245,8 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
                     <div>
                       <h4 className="font-medium">{product.name}</h4>
                       <p className="text-sm text-gray-500">
-                        {packagingUnit} {product.packaging_unit_name || 'unidades'} por empaque
+                        {packagingUnit}{" "}
+                        {product.packaging_unit_name || "unidades"} por empaque
                       </p>
                     </div>
                     <div className="flex items-center space-x-4">
@@ -222,7 +259,13 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
                           min="0"
                           step="0.01"
                           value={quantity.packaging}
-                          onChange={(e) => handleQuantityChange(product.id, e.target.value, packagingUnit)}
+                          onChange={(e) =>
+                            handleQuantityChange(
+                              product.id,
+                              e.target.value,
+                              packagingUnit
+                            )
+                          }
                           className="w-24 border rounded-md px-2 py-1"
                         />
                       </div>
@@ -242,10 +285,12 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
           </div>
         </div>
 
-
         {/* Fecha de corte */}
         <div>
-          <label htmlFor="cutoffDate" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cutoffDate"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             {localizations.inventory.cutoffDate} *
           </label>
           <select
@@ -261,32 +306,42 @@ export default function InventoryForm({ warehouses, products, onSuccess }: Inven
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">Solo se pueden seleccionar los primeros 3 días del mes</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Solo se pueden seleccionar los primeros 3 días del mes
+          </p>
         </div>
       </div>
 
-      
-        {selectedWarehouse && !getCanCountToday(selectedWarehouse) ? (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  No se pueden realizar más conteos para esta bodega hoy. Intente nuevamente mañana.
-                </p>
-              </div>
+      {selectedWarehouse && !getCanCountToday(selectedWarehouse) ? (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-yellow-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                No se pueden realizar más conteos para esta bodega hoy. Intente
+                nuevamente mañana.
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="pt-4">
-            <SubmitButton />
-          </div>
-        )}
-      
+        </div>
+      ) : (
+        <div className="pt-4">
+          <SubmitButton />
+        </div>
+      )}
     </form>
   );
 }
