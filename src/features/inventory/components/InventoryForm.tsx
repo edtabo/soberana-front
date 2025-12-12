@@ -69,7 +69,9 @@ export default function InventoryForm({
   const today = new Date();
   const currentDay = today.getDate();
   // const isInventoryDisabled = currentDay > Number(process.env.MAX_DAYS);
-  const isInventoryDisabled = currentDay > 50;
+  const isInventoryDisabled = false;
+
+  console.log("isInventoryDisabled", isInventoryDisabled);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
